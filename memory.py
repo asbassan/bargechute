@@ -184,32 +184,54 @@ class MemoryStore:
         top_k:   int = 5,
         category: str = None,
     ) -> list[Memory]:
-        """Full-text search across memory content and keys."""
+        """Full-text search across memory content and keys.
+
+        Tries the full query first (AND semantics). If nothing matches, falls
+        back to searching each term individually, deduplicating by key and
+        sorting by importance.
+        """
         if category is not None and category not in VALID_CATEGORIES:
             raise ValueError(
                 f"category must be one of {sorted(VALID_CATEGORIES)}, got {category!r}"
             )
-        if category:
-            rows = self._conn.execute(
-                """SELECT m.id, m.category, m.key, m.content, m.source, m.importance
-                   FROM memories_fts f
-                   JOIN memories m ON m.id = f.rowid
-                   WHERE memories_fts MATCH ?
-                     AND m.category = ?
-                   ORDER BY rank
-                   LIMIT ?""",
-                (query, category, top_k),
-            ).fetchall()
-        else:
-            rows = self._conn.execute(
-                """SELECT m.id, m.category, m.key, m.content, m.source, m.importance
-                   FROM memories_fts f
-                   JOIN memories m ON m.id = f.rowid
-                   WHERE memories_fts MATCH ?
-                   ORDER BY rank
-                   LIMIT ?""",
-                (query, top_k),
-            ).fetchall()
+        results = self._search_fts(query, top_k, category)
+        if results:
+            return results
+        seen = {}
+        for term in query.split():
+            if len(term) < 3:
+                continue
+            for m in self._search_fts(term, top_k, category):
+                if m.key not in seen:
+                    seen[m.key] = m
+        return sorted(seen.values(), key=lambda m: m.importance, reverse=True)[:top_k]
+
+    def _search_fts(self, query: str, top_k: int, category: str | None) -> list[Memory]:
+        """Execute a single FTS5 MATCH query. Returns empty list on FTS syntax errors."""
+        try:
+            if category:
+                rows = self._conn.execute(
+                    """SELECT m.id, m.category, m.key, m.content, m.source, m.importance
+                       FROM memories_fts f
+                       JOIN memories m ON m.id = f.rowid
+                       WHERE memories_fts MATCH ?
+                         AND m.category = ?
+                       ORDER BY rank
+                       LIMIT ?""",
+                    (query, category, top_k),
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    """SELECT m.id, m.category, m.key, m.content, m.source, m.importance
+                       FROM memories_fts f
+                       JOIN memories m ON m.id = f.rowid
+                       WHERE memories_fts MATCH ?
+                       ORDER BY rank
+                       LIMIT ?""",
+                    (query, top_k),
+                ).fetchall()
+        except Exception:
+            return []
         return [Memory(*r) for r in rows]
 
     def all(self, category: str = None) -> list[Memory]:

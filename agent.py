@@ -14,8 +14,12 @@ container runtime (Go). Barge lives at the path configured in BARGE_PATH.
 ## Mandatory workflow — follow this order on every task
 
 0. If given a GitHub issue number, call get_issue to read the title and body.
-1. Call search_memory with a relevant query before writing any code.
-2. Call create_branch("fix/issue-N-short-description") before touching any file.
+1. Call search_memory with 2-3 short keywords that would appear verbatim in memory \
+(e.g. "bargefile instruction" not "Bargefile parser builder instruction"). \
+The search tries your full query first, then each keyword individually.
+2. Call list_files() or list_files(subdir="internal/build") to find exact file paths \
+before calling read_file. Never guess or invent paths.
+3. Call create_branch("fix/issue-N-short-description") before touching any file.
 3. Call read_file on every file you plan to modify before touching it.
 4. Propose the full plan to the user — branch name, which files change, what each \
 change does, and why. Cross-reference any relevant past fixes from memory. \

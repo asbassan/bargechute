@@ -128,23 +128,30 @@ def go_test(pkg: str = "./...") -> str:
 
 
 @tool
-def read_file(relative_path: str) -> str:
-    """Read a file from the Barge repository. Path is relative to the Barge root."""
-    path = BARGE_PATH / relative_path
-    if not path.exists():
-        return f"File not found: {relative_path}"
-    return path.read_text(encoding="utf-8")
+def read_file(path: str) -> str:
+    """Read a file from the Barge repository.
+
+    path is relative to the Barge root, e.g. 'internal/build/bargefile.go'
+    Call list_files() first if you are unsure of the exact path.
+    """
+    full = BARGE_PATH / path
+    if not full.exists():
+        return f"File not found: {path}"
+    return full.read_text(encoding="utf-8")
 
 
 @tool
-def write_file(relative_path: str, content: str) -> str:
-    """Write content to a file in the Barge repository. Creates parent directories if needed."""
-    path = (BARGE_PATH / relative_path).resolve()
-    if not str(path).startswith(str(BARGE_PATH.resolve())):
-        return f"Error: path {relative_path!r} is outside the Barge repository"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
-    return f"Written: {relative_path} ({len(content)} bytes)"
+def write_file(path: str, content: str) -> str:
+    """Write content to a file in the Barge repository. Creates parent directories if needed.
+
+    path is relative to the Barge root, e.g. 'internal/build/bargefile.go'
+    """
+    full = (BARGE_PATH / path).resolve()
+    if not str(full).startswith(str(BARGE_PATH.resolve())):
+        return f"Error: path {path!r} is outside the Barge repository"
+    full.parent.mkdir(parents=True, exist_ok=True)
+    full.write_text(content, encoding="utf-8")
+    return f"Written: {path} ({len(content)} bytes)"
 
 
 @tool
