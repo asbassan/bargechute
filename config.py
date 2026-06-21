@@ -12,5 +12,5 @@ BARGE_PATH = Path(os.getenv("BARGE_PATH", r"D:\AIResearchAndStudies\AICoding\Bar
 GITHUB_REPO = os.getenv("BARGECHUTE_REPO", "asbassan/barge")
 
 # Ollama settings
-MODEL = os.getenv("BARGECHUTE_MODEL", "qwen2.5-coder:7b")
+MODEL = os.getenv("BARGECHUTE_MODEL", "llama3.1:8b")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
