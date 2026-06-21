@@ -32,13 +32,11 @@ Session:
         llm = ChatOllama(model=MODEL, base_url=OLLAMA_BASE_URL)
         response = llm.invoke([HumanMessage(prompt)])
         summary = response.content.strip()
-        store.store(
-            EPISODIC,
-            session_id,
-            summary,
-            source=SOURCE_SESSION,
-            importance=3,
-        )
-        print(f"\n[session summary stored: {session_id}]")
+        if store.exists(session_id):
+            store.append(session_id, summary, source=SOURCE_SESSION)
+            print(f"\n[session summary appended: {session_id}]")
+        else:
+            store.store(EPISODIC, session_id, summary, source=SOURCE_SESSION, importance=3)
+            print(f"\n[session summary stored: {session_id}]")
     except Exception as e:
         print(f"\n[could not store session summary: {e}]")
