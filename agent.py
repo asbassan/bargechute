@@ -89,8 +89,20 @@ _graph = _build_graph(_checkpointer)
 
 def chat(message: str, session_id: str = "default") -> str:
     config = {"configurable": {"thread_id": session_id}}
-    result = _graph.invoke(
+    final_content = ""
+    for event in _graph.stream(
         {"messages": [HumanMessage(message)]},
         config=config,
-    )
-    return result["messages"][-1].content
+        stream_mode="values",
+    ):
+        msg = event["messages"][-1]
+        if hasattr(msg, "tool_calls") and msg.tool_calls:
+            for tc in msg.tool_calls:
+                args_str = ", ".join(f"{k}={v!r}" for k, v in tc["args"].items())
+                print(f"  >> {tc['name']}({args_str})", flush=True)
+        elif msg.__class__.__name__ == "ToolMessage":
+            preview = msg.content[:120] + "..." if len(msg.content) > 120 else msg.content
+            print(f"     {preview}", flush=True)
+        elif msg.__class__.__name__ == "AIMessage" and msg.content:
+            final_content = msg.content
+    return final_content
