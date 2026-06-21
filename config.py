@@ -8,6 +8,9 @@ DB_PATH = DATA_DIR / "bargechute.db"
 # Path to the Barge repository — override with BARGE_PATH env var
 BARGE_PATH = Path(os.getenv("BARGE_PATH", r"D:\AIResearchAndStudies\AICoding\Barge"))
 
+# GitHub repository (owner/repo) for the Barge project
+GITHUB_REPO = os.getenv("BARGECHUTE_REPO", "asbassan/barge")
+
 # Ollama settings
 MODEL = os.getenv("BARGECHUTE_MODEL", "qwen2.5-coder:7b")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")

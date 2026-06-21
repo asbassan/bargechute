@@ -1,6 +1,7 @@
+import json
 import subprocess
 from langchain_core.tools import tool
-from config import BARGE_PATH
+from config import BARGE_PATH, GITHUB_REPO
 from memory import MemoryStore, SEMANTIC, EPISODIC, PROCEDURAL, SOURCE_SESSION, KeyExistsError
 
 _store = MemoryStore()
@@ -158,6 +159,90 @@ def list_files(subdir: str = "") -> str:
     return "\n".join(str(e.relative_to(BARGE_PATH)) for e in entries)
 
 
+# ── GitHub / Git tools ───────────────────────────────────────────────────────
+
+@tool
+def get_issue(issue_number: int) -> str:
+    """Read a GitHub issue from the Barge repository."""
+    result = subprocess.run(
+        ["gh", "issue", "view", str(issue_number),
+         "--json", "title,body", "--repo", GITHUB_REPO],
+        capture_output=True, text=True, timeout=30,
+    )
+    if result.returncode != 0:
+        return f"Failed to fetch issue {issue_number}:\n{result.stderr}"
+    data = json.loads(result.stdout)
+    return f"Issue #{issue_number}: {data['title']}\n\n{data['body']}"
+
+
+@tool
+def create_branch(branch_name: str) -> str:
+    """Create and switch to a new git branch in the Barge repository.
+
+    Use naming convention: fix/issue-N-short-description
+    Always call this before making any file changes.
+    """
+    checkout = subprocess.run(
+        ["git", "checkout", "master"],
+        cwd=str(BARGE_PATH), capture_output=True, text=True, timeout=15,
+    )
+    if checkout.returncode != 0:
+        return f"Failed to checkout master:\n{checkout.stderr}"
+    result = subprocess.run(
+        ["git", "checkout", "-b", branch_name],
+        cwd=str(BARGE_PATH), capture_output=True, text=True, timeout=15,
+    )
+    if result.returncode != 0:
+        return f"Failed to create branch {branch_name!r}:\n{result.stderr}"
+    return f"Created and switched to branch: {branch_name}"
+
+
+@tool
+def git_commit(message: str) -> str:
+    """Stage all changes and commit in the Barge repository."""
+    add = subprocess.run(
+        ["git", "add", "-A"],
+        cwd=str(BARGE_PATH), capture_output=True, text=True, timeout=15,
+    )
+    if add.returncode != 0:
+        return f"git add failed:\n{add.stderr}"
+    result = subprocess.run(
+        ["git", "commit", "-m", message],
+        cwd=str(BARGE_PATH), capture_output=True, text=True, timeout=15,
+    )
+    if result.returncode != 0:
+        return f"git commit failed:\n{result.stderr}"
+    return f"Committed: {message}"
+
+
+@tool
+def create_pr(title: str, body: str) -> str:
+    """Push the current branch and open a pull request against master.
+
+    Always call git_commit before this tool.
+    """
+    branch = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=str(BARGE_PATH), capture_output=True, text=True, timeout=10,
+    ).stdout.strip()
+    if not branch or branch == "master":
+        return "Error: cannot create PR from master — call create_branch first."
+    push = subprocess.run(
+        ["git", "push", "-u", "origin", branch],
+        cwd=str(BARGE_PATH), capture_output=True, text=True, timeout=30,
+    )
+    if push.returncode != 0:
+        return f"git push failed:\n{push.stderr}"
+    result = subprocess.run(
+        ["gh", "pr", "create", "--title", title, "--body", body,
+         "--repo", GITHUB_REPO],
+        cwd=str(BARGE_PATH), capture_output=True, text=True, timeout=30,
+    )
+    if result.returncode != 0:
+        return f"PR creation failed:\n{result.stderr}"
+    return f"PR created: {result.stdout.strip()}"
+
+
 TOOLS = [
     search_memory,
     store_semantic,
@@ -165,6 +250,10 @@ TOOLS = [
     store_procedural,
     overwrite_memory,
     append_memory,
+    get_issue,
+    create_branch,
+    git_commit,
+    create_pr,
     go_build,
     go_test,
     read_file,

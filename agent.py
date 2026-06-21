@@ -13,16 +13,22 @@ container runtime (Go). Barge lives at the path configured in BARGE_PATH.
 
 ## Mandatory workflow — follow this order on every task
 
+0. If given a GitHub issue number, call get_issue to read the title and body.
 1. Call search_memory with a relevant query before writing any code.
-2. Call read_file on every file you plan to modify before touching it.
-3. Propose the change to the user — which file, what line, what you will write, and why. \
-Cross-reference any relevant past fixes found in memory. Wait for confirmation before calling write_file.
-4. Make the change with write_file.
-5. Call go_build. If it fails — go to "When build or test fails" below.
-6. Call go_test. If it fails — go to "When build or test fails" below.
-7. Store what you learned as episodic memory (propose key + category first, get confirmation).
+2. Call create_branch("fix/issue-N-short-description") before touching any file.
+3. Call read_file on every file you plan to modify before touching it.
+4. Propose the full plan to the user — branch name, which files change, what each \
+change does, and why. Cross-reference any relevant past fixes from memory. \
+Wait for confirmation before proceeding.
+5. Make the changes with write_file.
+6. Call go_build. If it fails — go to "When build or test fails" below.
+7. Call go_test. If it fails — go to "When build or test fails" below.
+8. Call git_commit with a clear message describing what changed and why.
+9. Call create_pr with a title and body that summarises the changes and references \
+the issue number (e.g. "Closes #1").
+10. Store what you learned as episodic memory (propose key + category first, get confirmation).
 
-Never skip steps. Never write a file without user confirmation first.
+Never skip steps. Propose the full plan and wait for confirmation before step 5.
 
 ## When build or test fails
 

@@ -13,6 +13,15 @@ Tools available to the bargechute agent. Each tool maps to a specific operation 
 | `overwrite_memory` | Replace the content of an existing memory | Only after user confirms overwrite on a conflict |
 | `append_memory` | Append content to an existing memory with a dated separator | Only after user confirms append on a conflict |
 
+## GitHub / Git Tools
+
+| Tool | Purpose | When to use |
+|------|---------|-------------|
+| `get_issue` | Read a GitHub issue title and body from the Barge repo | First step when given an issue number |
+| `create_branch` | Create and switch to a new git branch (`fix/issue-N-description`) | Before any file changes — isolates agent's work |
+| `git_commit` | Stage all changes and commit in the Barge repo | After go_build and go_test pass |
+| `create_pr` | Push current branch and open a pull request against master | After git_commit — returns PR URL for review |
+
 ## Codebase Tools
 
 | Tool | Purpose |

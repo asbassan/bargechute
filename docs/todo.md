@@ -4,6 +4,10 @@ Action items deferred for later. Complete items are moved to the bottom.
 
 ## Pending
 
+### PR Review Loop (next GitHub milestone)
+
+- **Agent reads PR review comments and iterates** — After the agent creates a PR, the user or reviewer leaves comments on the diff. Add a `get_pr_comments(pr_number)` tool (`gh pr view N --json reviews,comments --repo asbassan/barge`) so the agent can read review feedback, make the requested changes on the same branch, commit, push (PR auto-updates), and reply that the changes are addressed. Closes the human-in-the-loop cycle: issue → PR → review → fix → re-review → merge.
+
 ### Sessions (UX — not blocking first bug fix)
 
 - **sessions.py** — Session registry module. `sessions` table in `bargechute.db` with `name TEXT PRIMARY KEY, created_at INTEGER`. Methods: `create(name)`, `list()`, `exists(name)`. Session name is used directly as LangGraph `thread_id`.
