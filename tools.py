@@ -77,16 +77,16 @@ def store_procedural(key: str, content: str, importance: int = 5) -> str:
 
 
 @tool
-def propose_plan(branch_name: str, changed_files: list[str], changes: str, why: str) -> str:
+def propose_plan(branch_name: str, files: list[str], changes: str, why: str) -> str:
     """Present your implementation plan to the user before making any changes.
 
     Call this after list_files and before create_branch.
     branch_name: the git branch you will create
-    changed_files: list of relative file paths you will modify
+    files: list of relative file paths you will modify
     changes: what you will change in each file
     why: the reason for the change
     """
-    files_str = "\n".join(f"    - {f}" for f in changed_files)
+    files_str = "\n".join(f"    - {f}" for f in files)
     print(
         f"\n  [PLAN]\n"
         f"  Branch : {branch_name}\n"
@@ -211,6 +211,11 @@ def create_branch(branch_name: str) -> str:
     Use naming convention: fix/issue-N-short-description
     Always call this before making any file changes.
     """
+    # Sanitize: lowercase, replace spaces and invalid chars with hyphens, collapse runs
+    import re as _re
+    safe = _re.sub(r'[^\w/.-]', '-', branch_name.lower())
+    safe = _re.sub(r'-{2,}', '-', safe).strip('-')
+
     checkout = subprocess.run(
         ["git", "checkout", "master"],
         cwd=str(BARGE_PATH), capture_output=True, text=True, timeout=15,
@@ -218,12 +223,12 @@ def create_branch(branch_name: str) -> str:
     if checkout.returncode != 0:
         return f"Failed to checkout master:\n{checkout.stderr}"
     result = subprocess.run(
-        ["git", "checkout", "-b", branch_name],
+        ["git", "checkout", "-b", safe],
         cwd=str(BARGE_PATH), capture_output=True, text=True, timeout=15,
     )
     if result.returncode != 0:
-        return f"Failed to create branch {branch_name!r}:\n{result.stderr}"
-    return f"Created and switched to branch: {branch_name}"
+        return f"Failed to create branch {safe!r}:\n{result.stderr}"
+    return f"Created and switched to branch: {safe}"
 
 
 @tool

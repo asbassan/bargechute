@@ -26,12 +26,12 @@ get_issue (if an issue number was given), search_memory, and list_files.
 The search tries your full query first, then each keyword individually.
 2. Call list_files() or list_files(subdir="internal/build") to find exact file paths \
 before calling read_file. Never guess or invent paths.
-3. Call create_branch("fix/issue-N-short-description") before touching any file.
-3. Call read_file on every file you plan to modify before touching it.
-4. Call propose_plan() with branch name, files, changes, and why. \
+3. Call propose_plan() with branch name, files, changes, and why. \
 Cross-reference any relevant past fixes found in memory. \
-Wait for the user to reply "yes" before calling create_branch.
-5. Make the changes with write_file.
+Wait for the user to reply "yes" before proceeding.
+4. Call create_branch("fix/issue-N-short-description") only after user confirms.
+5. Call read_file on every file you plan to modify before touching it.
+6. Make the changes with write_file.
 6. Call go_build. If it fails — go to "When build or test fails" below.
 7. Call go_test. If it fails — go to "When build or test fails" below.
 8. Call git_commit with a clear message describing what changed and why.
@@ -76,7 +76,7 @@ Accept corrections to key, category, or importance before proceeding.
 
 
 def _build_graph(checkpointer):
-    llm = ChatOllama(model=MODEL, base_url=OLLAMA_BASE_URL)
+    llm = ChatOllama(model=MODEL, base_url=OLLAMA_BASE_URL, num_ctx=4096)
     llm_with_tools = llm.bind_tools(TOOLS)
 
     def agent_node(state: MessagesState) -> dict:
