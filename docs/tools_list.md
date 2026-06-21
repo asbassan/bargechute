@@ -10,6 +10,7 @@ Tools available to the bargechute agent. Each tool maps to a specific operation 
 | `store_semantic` | Store a new semantic memory (facts, architecture, conventions) | New key only — returns conflict info if key already exists |
 | `store_episodic` | Store a new episodic memory (past sessions, bug fixes, what was tried) | New key only — returns conflict info if key already exists |
 | `store_procedural` | Store a new procedural memory (rules the agent must always follow) | New key only — returns conflict info if key already exists |
+| `propose_plan` | Display implementation plan to the user (branch, files, changes, why) | After list_files, before create_branch — waits for user "yes" |
 | `overwrite_memory` | Replace the content of an existing memory | Only after user confirms overwrite on a conflict |
 | `append_memory` | Append content to an existing memory with a dated separator | Only after user confirms append on a conflict |
 

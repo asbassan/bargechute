@@ -77,6 +77,28 @@ def store_procedural(key: str, content: str, importance: int = 5) -> str:
 
 
 @tool
+def propose_plan(branch_name: str, changed_files: list[str], changes: str, why: str) -> str:
+    """Present your implementation plan to the user before making any changes.
+
+    Call this after list_files and before create_branch.
+    branch_name: the git branch you will create
+    changed_files: list of relative file paths you will modify
+    changes: what you will change in each file
+    why: the reason for the change
+    """
+    files_str = "\n".join(f"    - {f}" for f in changed_files)
+    print(
+        f"\n  [PLAN]\n"
+        f"  Branch : {branch_name}\n"
+        f"  Files  :\n{files_str}\n"
+        f"  Changes: {changes}\n"
+        f"  Why    : {why}\n",
+        flush=True,
+    )
+    return "Plan displayed. Do not call create_branch until the user replies 'yes' or 'proceed'."
+
+
+@tool
 def overwrite_memory(key: str, content: str) -> str:
     """Replace an existing memory. Only call after the user has confirmed overwrite."""
     try:
@@ -257,6 +279,7 @@ TOOLS = [
     store_procedural,
     overwrite_memory,
     append_memory,
+    propose_plan,
     get_issue,
     create_branch,
     git_commit,
