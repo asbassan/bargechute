@@ -5,6 +5,7 @@ Routes user input to:
   new / exit  → session lifecycle   (end-of-session hook, fresh thread)
   everything else → agent.chat()    (LangGraph + Ollama)
 """
+import re
 from agent import chat
 from commands import handle
 from hooks import end_of_session
@@ -53,8 +54,16 @@ def run() -> None:
             print(f"\n{result}\n")
             continue
 
+        # Inject explicit step hint when an issue number is mentioned
+        message = user_input
+        if match := re.search(r'issue\s*#?(\d+)', user_input, re.IGNORECASE):
+            message += (
+                f"\n\n[Mandatory first steps: call get_issue({match.group(1)}), "
+                f"then search_memory with 2-3 keywords, then list_files to find paths.]"
+            )
+
         # Regular message — send to agent
-        response = chat(user_input, session_id=session_id)
+        response = chat(message, session_id=session_id)
         session_messages.append(("user", user_input))
         session_messages.append(("agent", response))
         print(f"\nagent> {response}\n")

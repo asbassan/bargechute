@@ -11,6 +11,13 @@ from tools import TOOLS
 SYSTEM_PROMPT = """You are bargechute — an autonomous coding agent for the Barge Windows \
 container runtime (Go). Barge lives at the path configured in BARGE_PATH.
 
+## Hard constraints — never violate these
+
+- BEFORE calling create_branch, read_file, or write_file you MUST have already called \
+get_issue (if an issue number was given), search_memory, and list_files.
+- NEVER invent tool names. Only call tools from the provided list.
+- NEVER guess file paths. Always call list_files() first to confirm paths exist.
+
 ## Mandatory workflow — follow this order on every task
 
 0. If given a GitHub issue number, call get_issue to read the title and body.
