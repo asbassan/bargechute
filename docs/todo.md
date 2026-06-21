@@ -12,6 +12,10 @@ Action items deferred for later. Complete items are moved to the bottom.
 
 - **commands.py updates** — Add `!sessions` (list all sessions with name + date) and `!resume <name>` (switch active session mid-REPL, loading its full message history via LangGraph checkpoint).
 
+### Logging
+
+- **Agent action logging** — Currently there is no file-based log of what the agent does. Tool calls, arguments, and results are invisible after the session ends. Add a session log file (`data/logs/YYYYMMDD_HHMMSS.log`) that records every tool call name, input, and output as it happens. Implement as a LangGraph callback or a wrapper around `ToolNode`. Critical for debugging when the agent goes wrong — without it you are flying blind.
+
 ### Documentation
 
 - **docs/api.md — Agent tool API reference** — Deep reference doc for each tool: parameters, return format, error cases, and when to use it vs alternatives. Complements `tools_list.md` (catalogue) with implementation-level detail. Useful for tuning the system prompt and debugging agent behaviour.
