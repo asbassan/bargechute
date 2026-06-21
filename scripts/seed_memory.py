@@ -215,10 +215,17 @@ Do not skip steps. Do not commit without passing build and tests.""", 5),
 
 def main():
     store = MemoryStore()
+    created = updated = 0
     for category, key, content, importance in MEMORIES:
-        store.store(category, key, content, source=SOURCE_SEED, importance=importance)
-        print(f"  stored: {category}/{key} (importance={importance})")
-    print(f"\nSeeded {len(MEMORIES)} memories.")
+        if store.exists(key):
+            store.overwrite(key, content, source=SOURCE_SEED, importance=importance)
+            print(f"  updated: {category}/{key} (importance={importance})")
+            updated += 1
+        else:
+            store.store(category, key, content, source=SOURCE_SEED, importance=importance)
+            print(f"  stored:  {category}/{key} (importance={importance})")
+            created += 1
+    print(f"\nDone — {created} created, {updated} updated.")
 
 
 if __name__ == "__main__":
