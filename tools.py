@@ -1,9 +1,19 @@
 import subprocess
 from langchain_core.tools import tool
 from config import BARGE_PATH
-from memory import MemoryStore, SEMANTIC, EPISODIC, PROCEDURAL, SOURCE_SESSION
+from memory import MemoryStore, SEMANTIC, EPISODIC, PROCEDURAL, SOURCE_SESSION, KeyExistsError
 
 _store = MemoryStore()
+
+
+def _conflict_message(key: str, existing, proposed: str) -> str:
+    preview = existing.content if len(existing.content) <= 300 else existing.content[:300] + "..."
+    return (
+        f"KEY EXISTS: key={key!r} ({existing.category}, importance={existing.importance})\n"
+        f"Current content:\n{preview}\n\n"
+        f"Proposed content:\n{proposed}\n\n"
+        f"Ask the user: overwrite / append / cancel"
+    )
 
 
 # ── Memory tools ──────────────────────────────────────────────────────────────
@@ -28,8 +38,11 @@ def store_semantic(key: str, content: str, importance: int = 3) -> str:
     key: unique slug, e.g. 'barge_copy_requires_powershell'
     importance: 1 (low) to 5 (critical), default 3
     """
-    _store.store(SEMANTIC, key, content, source=SOURCE_SESSION, importance=importance)
-    return f"Stored semantic memory: {key}"
+    try:
+        _store.store(SEMANTIC, key, content, source=SOURCE_SESSION, importance=importance)
+        return f"Stored semantic memory: {key}"
+    except KeyExistsError:
+        return _conflict_message(key, _store.get(key), content)
 
 
 @tool
@@ -40,8 +53,11 @@ def store_episodic(key: str, content: str, importance: int = 3) -> str:
     key: unique slug, e.g. 'bug_001' or 'session_3'
     importance: 1 (low) to 5 (critical), default 3
     """
-    _store.store(EPISODIC, key, content, source=SOURCE_SESSION, importance=importance)
-    return f"Stored episodic memory: {key}"
+    try:
+        _store.store(EPISODIC, key, content, source=SOURCE_SESSION, importance=importance)
+        return f"Stored episodic memory: {key}"
+    except KeyExistsError:
+        return _conflict_message(key, _store.get(key), content)
 
 
 @tool
@@ -52,8 +68,31 @@ def store_procedural(key: str, content: str, importance: int = 5) -> str:
     key: unique slug, e.g. 'rule_always_test'
     importance: defaults to 5 — procedural rules are highest priority
     """
-    _store.store(PROCEDURAL, key, content, source=SOURCE_SESSION, importance=importance)
-    return f"Stored procedural memory: {key}"
+    try:
+        _store.store(PROCEDURAL, key, content, source=SOURCE_SESSION, importance=importance)
+        return f"Stored procedural memory: {key}"
+    except KeyExistsError:
+        return _conflict_message(key, _store.get(key), content)
+
+
+@tool
+def overwrite_memory(key: str, content: str) -> str:
+    """Replace an existing memory. Only call after the user has confirmed overwrite."""
+    try:
+        _store.overwrite(key, content, source=SOURCE_SESSION)
+        return f"Overwritten: {key}"
+    except KeyError:
+        return f"Key {key!r} not found."
+
+
+@tool
+def append_memory(key: str, content: str) -> str:
+    """Append to an existing memory. Only call after the user has confirmed append."""
+    try:
+        _store.append(key, content, source=SOURCE_SESSION)
+        return f"Appended to: {key}"
+    except KeyError:
+        return f"Key {key!r} not found."
 
 
 # ── Barge repository tools ────────────────────────────────────────────────────
@@ -124,6 +163,8 @@ TOOLS = [
     store_semantic,
     store_episodic,
     store_procedural,
+    overwrite_memory,
+    append_memory,
     go_build,
     go_test,
     read_file,
