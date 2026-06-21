@@ -6,6 +6,7 @@ Routes user input to:
   everything else → agent.chat()    (LangGraph + Ollama)
 """
 import re
+from datetime import datetime
 from agent import chat
 from commands import handle
 from hooks import end_of_session
@@ -21,7 +22,7 @@ def run() -> None:
 
     store = MemoryStore()
     session_count = 1
-    session_id = f"session_{session_count}"
+    session_id = datetime.now().strftime("session_%Y%m%d_%H%M%S")
     session_messages: list[tuple[str, str]] = []
 
     while True:
@@ -43,7 +44,7 @@ def run() -> None:
         if user_input.lower() == "new":
             _close_session(session_id, session_messages, store)
             session_count += 1
-            session_id = f"session_{session_count}"
+            session_id = datetime.now().strftime("session_%Y%m%d_%H%M%S")
             session_messages = []
             print(f"\nStarted: {session_id}\n")
             continue

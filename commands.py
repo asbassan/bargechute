@@ -12,9 +12,15 @@ Commands:
 from memory import MemoryStore, VALID_CATEGORIES, SOURCE_SESSION
 
 
+_COMMAND_NAMES = {"remember", "list", "search", "delete", "help"}
+
+
 def handle(line: str, store: MemoryStore) -> str | None:
     """Return a response string if line is a ! command, None otherwise."""
     if not line.startswith("!"):
+        first = line.strip().split()[0].lower() if line.strip() else ""
+        if first in _COMMAND_NAMES:
+            return f"Did you mean '!{line.strip()}'? Commands require the ! prefix."
         return None
 
     parts = line[1:].strip().split(None, 3)
