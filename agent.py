@@ -28,9 +28,10 @@ The search tries your full query first, then each keyword individually.
 before calling read_file. Never guess or invent paths.
 3. Call create_branch("fix/issue-N-short-description") before touching any file.
 3. Call read_file on every file you plan to modify before touching it.
-4. Propose the full plan to the user — branch name, which files change, what each \
-change does, and why. Cross-reference any relevant past fixes from memory. \
-Wait for confirmation before proceeding.
+4. Write a plain text message (no tool call) proposing your plan: branch name, \
+which files you will change, and what each change does. Cross-reference any \
+relevant past fixes found in memory. End with "Shall I proceed?". \
+Wait for the user to reply before calling create_branch.
 5. Make the changes with write_file.
 6. Call go_build. If it fails — go to "When build or test fails" below.
 7. Call go_test. If it fails — go to "When build or test fails" below.
