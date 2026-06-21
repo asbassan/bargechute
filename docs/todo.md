@@ -12,6 +12,14 @@ Action items deferred for later. Complete items are moved to the bottom.
 
 - **commands.py updates** — Add `!sessions` (list all sessions with name + date) and `!resume <name>` (switch active session mid-REPL, loading its full message history via LangGraph checkpoint).
 
+### Documentation
+
+- **docs/api.md — Agent tool API reference** — Deep reference doc for each tool: parameters, return format, error cases, and when to use it vs alternatives. Complements `tools_list.md` (catalogue) with implementation-level detail. Useful for tuning the system prompt and debugging agent behaviour.
+
+### Packaging
+
+- **`bargechute` CLI entry point** — Add `[project.scripts] bargechute = "repl:run"` to `pyproject.toml`. After `pip install -e .` the agent starts with `bargechute` from any directory. Also fix `requires-python = ">=3.11"` → `">=3.10"` to match the running environment (Python 3.10.11).
+
 ### Architecture (deferred refactors)
 
 - **Split SQL schema out of memory.py** — `_SCHEMA` string in `memory.py` hides the DB structure inside Python. Create a `sqlscripts/` folder with one `.sql` file per table (e.g. `memories.sql`, `sessions.sql`). `memory.py` and `sessions.py` load and execute them rather than embedding DDL. Natural trigger: when `sessions.py` is introduced (two schema owners = the mess starts).
